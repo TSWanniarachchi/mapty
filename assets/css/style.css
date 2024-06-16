@@ -44,7 +44,7 @@ a:visited {
 .sidebar {
   flex-basis: 50rem;
   background-color: var(--color-dark--1);
-  padding: 3rem 5rem 4rem 5rem;
+  padding: 3rem 5rem 2.3rem 5rem;
   display: flex;
   flex-direction: column;
 }
@@ -169,6 +169,41 @@ a:visited {
 
 .form__btn {
   display: none;
+}
+
+.action__btn {
+  display: inline-block;
+  width: calc(33.33% - 1rem);
+  padding: 1rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--color-light--2);
+  background-color: var(--color-dark--2);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  margin: 10px 4px 10px 4px;
+  box-sizing: border-box;
+}
+
+.action__btn:hover,
+.action__btn:focus {
+  background-color: var(--color-light--1);
+  transform: scale(1.05);
+}
+
+.action__btn:disabled {
+  color: var(--color-light--3);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action__btn:disabled:hover,
+.action__btn:disabled:focus {
+  background-color: var(--color-dark--2);
+  transform: scale(1);
 }
 
 .copyright {
