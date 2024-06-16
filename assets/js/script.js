@@ -4,10 +4,9 @@
 // DATA ARCHITECTURE
 
 class Workout {
-  date = new Date();
-  id = (Date.now() + "").slice(-10);
-
-  constructor(coords, distance, duration) {
+  constructor(date, coords, distance, duration) {
+    this.date = new Date(date);
+    this.id = this.date.getTime().toString().slice(-10);
     this.coords = coords; // [lat, lng]
     this.distance = distance; // in km
     this.duration = duration; // in min
@@ -27,8 +26,8 @@ class Workout {
 class Running extends Workout {
   type = "running";
 
-  constructor(coords, distance, duration, cadence) {
-    super(coords, distance, duration);
+  constructor(date, coords, distance, duration, cadence) {
+    super(date, coords, distance, duration);
     this.cadence = cadence;
 
     this.calcPace();
@@ -45,8 +44,8 @@ class Running extends Workout {
 class Cycling extends Workout {
   type = "cycling";
 
-  constructor(coords, distance, duration, elevationGain) {
-    super(coords, distance, duration);
+  constructor(date, coords, distance, duration, elevationGain) {
+    super(date, coords, distance, duration);
     this.elevationGain = elevationGain;
 
     this.calcSpeed();
@@ -163,6 +162,7 @@ class App {
     const allPositive = (...inputs) => inputs.every((inp) => inp > 0);
 
     // Get data from form
+    const date = new Date();
     const type = inputType.value;
     const distance = +inputDistance.value;
     const duration = +inputDuration.value;
@@ -181,7 +181,7 @@ class App {
       )
         return alert("Inputs have to be positive numbers!");
 
-      workout = new Running([lat, lng], distance, duration, cadence);
+      workout = new Running(date, [lat, lng], distance, duration, cadence);
     }
 
     // If workout cycling, create cycling object
@@ -195,7 +195,7 @@ class App {
       )
         return alert("Inputs have to be positive numbers!");
 
-      workout = new Cycling([lat, lng], distance, duration, elevation);
+      workout = new Cycling(date, [lat, lng], distance, duration, elevation);
     }
 
     // Add new object to workout array
@@ -312,15 +312,34 @@ class App {
 
   // Retrieve workouts from local storage
   _getLocalStorage() {
-    const data = JSON.parse(localStorage.getItem("workouts"));
+    const storedWorkouts = JSON.parse(localStorage.getItem("workouts"));
 
-    if (!data) return;
+    if (!storedWorkouts) return;
 
-    this.#workouts = data;
+    this.#workouts = storedWorkouts.map((storedWorkout) => {
+      if (storedWorkout.type === "running") {
+        return new Running(
+          storedWorkout.date,
+          storedWorkout.coords,
+          storedWorkout.distance,
+          storedWorkout.duration,
+          storedWorkout.cadence
+        );
+      }
 
-    this.#workouts.forEach((workout) => {
-      this._renderWorkout(workout);
+      if (storedWorkout.type === "cycling") {
+        return new Cycling(
+          storedWorkout.date,
+          storedWorkout.coords,
+          storedWorkout.distance,
+          storedWorkout.duration,
+          storedWorkout.elevationGain
+        );
+      }
     });
+
+    // Render the local storage workouts
+    this.#workouts.forEach((workout) => this._renderWorkout(workout));
   }
 
   // Reset all workouts and reload the page
