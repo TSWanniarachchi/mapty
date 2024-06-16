@@ -82,8 +82,9 @@ class App {
     this._getPosition();
     this._getLocalStorage();
 
-    form.addEventListener("submit", this._newWorkout.bind(this));
     inputType.addEventListener("change", this._toggleElevationField);
+    form.addEventListener("submit", this._newWorkout.bind(this));
+    document.addEventListener("keydown", this._handleEscKey.bind(this));
     containerWorkouts.addEventListener("click", this._moveToPopup.bind(this));
   }
 
@@ -144,6 +145,13 @@ class App {
   _toggleElevationField() {
     inputCadence.closest(".form__row").classList.toggle("form__row--hidden");
     inputElevation.closest(".form__row").classList.toggle("form__row--hidden");
+  }
+
+  // Handle Escape key to hide form
+  _handleEscKey(event) {
+    if (event.key === "Escape" || event.keyCode === 27) {
+      this._hideForm();
+    }
   }
 
   // Create a new workout based on form data
