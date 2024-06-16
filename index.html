@@ -45,25 +45,37 @@
           </div>
           <div class="form__row">
             <label class="form__label">Distance</label>
-            <input class="form__input form__input--distance" placeholder="km" />
+            <input
+              class="form__input form__input--distance"
+              placeholder="km"
+              type="number"
+              min="0"
+              required />
           </div>
           <div class="form__row">
             <label class="form__label">Duration</label>
             <input
               class="form__input form__input--duration"
-              placeholder="min" />
+              placeholder="min"
+              type="number"
+              min="0"
+              required />
           </div>
           <div class="form__row">
             <label class="form__label">Cadence</label>
             <input
               class="form__input form__input--cadence"
-              placeholder="step/min" />
+              placeholder="step/min"
+              type="number"
+              min="0"
+              required />
           </div>
           <div class="form__row form__row--hidden">
             <label class="form__label">Elev Gain</label>
             <input
               class="form__input form__input--elevation"
-              placeholder="meters" />
+              placeholder="meters"
+              type="number" />
           </div>
           <button class="form__btn">OK</button>
         </form>
@@ -116,6 +128,16 @@
           </div>
         </li> -->
       </ul>
+
+      <div class="action">
+        <button class="action__btn action__btn--reset" disabled>
+          RESET 🔄
+        </button>
+        <button class="action__btn action__btn--show-all" disabled>
+          SHOW ALL🔍
+        </button>
+        <button class="action__btn action__btn--sort" disabled>SORT 🔃</button>
+      </div>
 
       <p class="copyright">
         &copy; Copyright by
