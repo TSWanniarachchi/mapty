@@ -81,7 +81,7 @@ class App {
     this._getPosition();
     this._getLocalStorage();
 
-    inputType.addEventListener("change", this._toggleElevationField);
+    inputType.addEventListener("change", this._toggleWorkoutFields);
     form.addEventListener("submit", this._newWorkout.bind(this));
     document.addEventListener("keydown", this._handleEscKey.bind(this));
     containerWorkouts.addEventListener("click", this._moveToPopup.bind(this));
@@ -140,10 +140,22 @@ class App {
     setTimeout(() => ((form.style.display = "grid"), 1000));
   }
 
-  // Toggle between cadence and elevation fields based on workout type
-  _toggleElevationField() {
+  // Toggles visibility and required status of input fields based on selected workout type
+  _toggleWorkoutFields() {
     inputCadence.closest(".form__row").classList.toggle("form__row--hidden");
     inputElevation.closest(".form__row").classList.toggle("form__row--hidden");
+
+    const type = inputType.value;
+
+    if (type === "running") {
+      inputCadence.setAttribute("required", "");
+      inputElevation.removeAttribute("required");
+    }
+
+    if (type === "cycling") {
+      inputElevation.setAttribute("required", "");
+      inputCadence.removeAttribute("required");
+    }
   }
 
   // Handle Escape key to hide form
@@ -175,11 +187,15 @@ class App {
       const cadence = +inputCadence.value;
 
       // Check if data is valid
-      if (
-        !validInputs(distance, duration, cadence) ||
-        !allPositive(distance, duration, cadence)
-      )
-        return alert("Inputs have to be positive numbers!");
+      if (!validInputs(distance, duration, cadence))
+        return alert(
+          "Please enter valid numbers for distance, duration, and cadence."
+        );
+
+      if (!allPositive(distance, duration, cadence))
+        return alert(
+          "Please make sure distance, duration, and cadence are all positive numbers."
+        );
 
       workout = new Running(date, [lat, lng], distance, duration, cadence);
     }
@@ -189,11 +205,15 @@ class App {
       const elevation = +inputElevation.value;
 
       // Check if data is valid
-      if (
-        !validInputs(distance, duration, elevation) ||
-        !allPositive(distance, duration)
-      )
-        return alert("Inputs have to be positive numbers!");
+      if (!validInputs(distance, duration, elevation))
+        return alert(
+          "Please enter valid numbers for distance, duration, and elevation."
+        );
+
+      if (!allPositive(distance, duration))
+        return alert(
+          "Please make sure distance, and duration are all positive numbers."
+        );
 
       workout = new Cycling(date, [lat, lng], distance, duration, elevation);
     }
@@ -348,6 +368,12 @@ class App {
 
   // Reset all workouts and reload the page
   reset() {
+    const confirmation = confirm(
+      "Are you sure you want to reset all workouts?"
+    );
+
+    if (!confirmation) return;
+
     localStorage.removeItem("workouts");
     location.reload();
   }
