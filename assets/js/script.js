@@ -72,12 +72,14 @@ const inputCadence = document.querySelector(".form__input--cadence");
 const inputElevation = document.querySelector(".form__input--elevation");
 const btnReset = document.querySelector(".action__btn--reset");
 const btnShowAll = document.querySelector(".action__btn--show-all");
+const btnSort = document.querySelector(".action__btn--sort");
 
 class App {
   #map;
   #mapZoomLevel = 13;
   #mapEvent;
   #workouts = [];
+  #isAscending = true;
 
   constructor() {
     this._getPosition();
@@ -90,6 +92,7 @@ class App {
     containerWorkouts.addEventListener("click", this._moveToPopup.bind(this));
     btnReset.addEventListener("click", this._reset.bind(this));
     btnShowAll.addEventListener("click", this._fitMapToAllWorkouts.bind(this));
+    btnSort.addEventListener("click", this._sortWorkouts.bind(this));
   }
 
   // Get user's current position using Geolocation API
@@ -130,6 +133,7 @@ class App {
     if (this.#workouts.length) {
       btnReset.disabled = false;
       btnShowAll.disabled = false;
+      btnSort.disabled = false;
     }
   }
 
@@ -402,6 +406,30 @@ class App {
 
     const workoutLocations = this.#workouts.map((workout) => workout.coords);
     this.#map.fitBounds(workoutLocations);
+  }
+
+  // Sort workouts based on distance in ascending or descending order
+  _sortWorkouts() {
+    if (!this.#workouts.length) return;
+
+    const sortedWorkouts = [...this.#workouts];
+
+    sortedWorkouts.sort((workoutA, workoutB) =>
+      this.#isAscending
+        ? workoutA.distance - workoutB.distance
+        : workoutB.distance - workoutA.distance
+    );
+
+    // Remove all existing workout elements from the DOM
+    document
+      .querySelectorAll(".workout")
+      .forEach((workoutElement) => workoutElement.remove());
+
+    // Render the sorted workouts
+    sortedWorkouts.forEach((workout) => this._renderWorkout(workout));
+
+    // Toggle the sorting order for the next click
+    this.#isAscending = !this.#isAscending;
   }
 }
 
