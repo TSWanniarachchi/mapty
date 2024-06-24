@@ -71,6 +71,7 @@ const inputDuration = document.querySelector(".form__input--duration");
 const inputCadence = document.querySelector(".form__input--cadence");
 const inputElevation = document.querySelector(".form__input--elevation");
 const btnReset = document.querySelector(".action__btn--reset");
+const btnShowAll = document.querySelector(".action__btn--show-all");
 
 class App {
   #map;
@@ -88,6 +89,7 @@ class App {
     document.addEventListener("keydown", this._handleEscKey.bind(this));
     containerWorkouts.addEventListener("click", this._moveToPopup.bind(this));
     btnReset.addEventListener("click", this._reset.bind(this));
+    btnShowAll.addEventListener("click", this._fitMapToAllWorkouts.bind(this));
   }
 
   // Get user's current position using Geolocation API
@@ -127,6 +129,7 @@ class App {
   _enableActionButtons() {
     if (this.#workouts.length) {
       btnReset.disabled = false;
+      btnShowAll.disabled = false;
     }
   }
 
@@ -391,6 +394,14 @@ class App {
 
     localStorage.removeItem("workouts");
     location.reload();
+  }
+
+  // Fit map to show all workout markers
+  _fitMapToAllWorkouts() {
+    if (!this.#workouts.length) return;
+
+    const workoutLocations = this.#workouts.map((workout) => workout.coords);
+    this.#map.fitBounds(workoutLocations);
   }
 }
 
