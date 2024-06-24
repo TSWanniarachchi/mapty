@@ -70,6 +70,7 @@ const inputDistance = document.querySelector(".form__input--distance");
 const inputDuration = document.querySelector(".form__input--duration");
 const inputCadence = document.querySelector(".form__input--cadence");
 const inputElevation = document.querySelector(".form__input--elevation");
+const btnReset = document.querySelector(".action__btn--reset");
 
 class App {
   #map;
@@ -80,11 +81,13 @@ class App {
   constructor() {
     this._getPosition();
     this._getLocalStorage();
+    this._enableActionButtons();
 
     inputType.addEventListener("change", this._toggleWorkoutFields);
     form.addEventListener("submit", this._newWorkout.bind(this));
     document.addEventListener("keydown", this._handleEscKey.bind(this));
     containerWorkouts.addEventListener("click", this._moveToPopup.bind(this));
+    btnReset.addEventListener("click", this._reset.bind(this));
   }
 
   // Get user's current position using Geolocation API
@@ -118,6 +121,13 @@ class App {
     this.#workouts.forEach((workout) => {
       this._renderWorkoutMarker(workout);
     });
+  }
+
+  // Enable the action buttons
+  _enableActionButtons() {
+    if (this.#workouts.length) {
+      btnReset.disabled = false;
+    }
   }
 
   // Show form on map click
@@ -221,6 +231,9 @@ class App {
     // Add new object to workout array
     this.#workouts.push(workout);
 
+    // Set local storage to all workouts
+    this._setLocalStorage();
+
     // Render workout on map as marker
     this._renderWorkoutMarker(workout);
 
@@ -230,8 +243,8 @@ class App {
     // Hide form + clear input fields
     this._hideForm();
 
-    // Set local storage to all workouts
-    this._setLocalStorage();
+    // Enable the action buttons
+    this._enableActionButtons();
   }
 
   // Render workout marker on the map
@@ -367,7 +380,9 @@ class App {
   }
 
   // Reset all workouts and reload the page
-  reset() {
+  _reset() {
+    if (!this.#workouts.length) return;
+
     const confirmation = confirm(
       "Are you sure you want to reset all workouts?"
     );
