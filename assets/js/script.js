@@ -78,6 +78,8 @@ class App {
   #map;
   #mapZoomLevel = 13;
   #mapEvent;
+  #markers = [];
+  #userCoords;
   #workouts = [];
   #isAscending = true;
 
@@ -89,7 +91,10 @@ class App {
     inputType.addEventListener("change", this._toggleWorkoutFields);
     form.addEventListener("submit", this._newWorkout.bind(this));
     document.addEventListener("keydown", this._handleEscKey.bind(this));
-    containerWorkouts.addEventListener("click", this._moveToPopup.bind(this));
+    containerWorkouts.addEventListener(
+      "click",
+      this._handleWorkoutClick.bind(this)
+    );
     btnReset.addEventListener("click", this._reset.bind(this));
     btnShowAll.addEventListener("click", this._fitMapToAllWorkouts.bind(this));
     btnSort.addEventListener("click", this._sortWorkouts.bind(this));
@@ -111,6 +116,7 @@ class App {
   _loadMap(position) {
     const { latitude, longitude } = position.coords;
     const coords = [latitude, longitude];
+    this.#userCoords = coords;
 
     this.#map = L.map("map").setView(coords, this.#mapZoomLevel);
 
@@ -134,6 +140,15 @@ class App {
       btnReset.disabled = false;
       btnShowAll.disabled = false;
       btnSort.disabled = false;
+    }
+  }
+
+  // Disable the action buttons
+  _disableActionButtons() {
+    if (!this.#workouts.length) {
+      btnReset.disabled = true;
+      btnShowAll.disabled = true;
+      btnSort.disabled = true;
     }
   }
 
@@ -254,9 +269,51 @@ class App {
     this._enableActionButtons();
   }
 
+  // Edit an existing workout
+  _editWorkout(workout) {
+    console.log("Edit workout:", workout);
+    // Add logic to edit the workout here
+  }
+
+  // Delete an existing workout
+  _deleteWorkout(workout) {
+    const workoutId = workout.id;
+    const workoutIndex = this.#workouts.findIndex(
+      (workout) => workout.id === workoutId
+    );
+
+    // Remove the workout from workouts array
+    this.#workouts.splice(workoutIndex, 1);
+
+    // Remove workout from the local storage
+    this._setLocalStorage();
+
+    // Remove the workout element from the DOM
+    this._removeWorkout(workoutId);
+
+    // Remove the workout marker from the map
+    this._removeWorkoutMarker(this.#markers[workoutIndex]);
+
+    // Disable action buttons if no workouts remain
+    this._disableActionButtons();
+
+    // Move map to default user coordinates if no workouts remain
+    !this.#workouts.length && this._moveMapToCoords(this.#userCoords);
+  }
+
+  // Move map to specific coords
+  _moveMapToCoords(coords) {
+    this.#map.setView(coords, this.#mapZoomLevel, {
+      animate: true,
+      pan: {
+        duration: 1,
+      },
+    });
+  }
+
   // Render workout marker on the map
   _renderWorkoutMarker(workout) {
-    L.marker(workout.coords)
+    const marker = L.marker(workout.coords)
       .addTo(this.#map)
       .bindPopup(
         L.popup({
@@ -271,6 +328,17 @@ class App {
         `${workout.type === "running" ? "🏃‍♂️" : "🚴‍♀️"} ${workout.description}`
       )
       .openPopup();
+
+    // Store the marker in #markers array
+    this.#markers.push(marker);
+  }
+
+  // Remove workout marker on the map
+  _removeWorkoutMarker(marker) {
+    this.#map.removeLayer(marker);
+
+    // Remove marker from #markers array
+    this.#markers = this.#markers.filter((mkr) => mkr !== marker);
   }
 
   // Render workout on the list
@@ -331,22 +399,49 @@ class App {
     form.insertAdjacentHTML("afterend", html);
   }
 
-  // Move map to workout marker on clicking workout in the list
-  _moveToPopup(event) {
-    const workoutEL = event.target.closest(".workout");
+  // Remove workout on the list
+  _removeWorkout(workoutId) {
+    document.querySelector(`[data-id="${workoutId}"]`).remove();
+  }
 
-    if (!workoutEL) return;
+  // Remove all workouts on the list
+  _removeAllWorkouts() {
+    document
+      .querySelectorAll(".workout")
+      .forEach((workoutElement) => workoutElement.remove());
+  }
 
-    const workout = this.#workouts.find(
-      (workout) => workout.id === workoutEL.dataset.id
-    );
+  // Handle clicks on workout items in the list
+  _handleWorkoutClick(event) {
+    const workoutElement = event.target.closest(".workout");
 
-    this.#map.setView(workout.coords, this.#mapZoomLevel, {
-      animate: true,
-      pan: {
-        duration: 1,
-      },
-    });
+    if (!workoutElement) return;
+
+    const workoutId = workoutElement.dataset.id;
+    const workout = this.#workouts.find((workout) => workout.id === workoutId);
+
+    if (!workout) {
+      // console.log(`Workout with ID ${id} not found.`);
+      console.log(
+        "System error: An unexpected error occurred while processing the request."
+      );
+      return;
+    }
+
+    // Handle click on "Edit" button within the workout element
+    if (event.target.classList.contains("workout__btn--edit")) {
+      this._editWorkout(workout);
+      return;
+    }
+
+    // Handle click on "Delete" button within the workout element
+    if (event.target.classList.contains("workout__btn--delete")) {
+      this._deleteWorkout(workout);
+      return;
+    }
+
+    // Handle click on the workout element itself (not on edit or delete button)
+    this._moveMapToCoords(workout.coords);
   }
 
   // Store workouts in local storage
@@ -420,10 +515,8 @@ class App {
         : workoutB.distance - workoutA.distance
     );
 
-    // Remove all existing workout elements from the DOM
-    document
-      .querySelectorAll(".workout")
-      .forEach((workoutElement) => workoutElement.remove());
+    // Remove all existing workouts
+    this._removeAllWorkouts();
 
     // Render the sorted workouts
     sortedWorkouts.forEach((workout) => this._renderWorkout(workout));
